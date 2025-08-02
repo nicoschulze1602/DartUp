@@ -1,0 +1,27 @@
+# Python Bytecode
+__pycache__/
+*.py[cod]
+
+# Virtuelle Umgebung
+venv/
+.venv/
+env/
+.env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Umgebungsvariablen (sensibel)
+*.env
+
+# Datenbanken, Logs, SQLite-Dateien
+*.sqlite3
+*.db
+*.log
+
+# Migrations (optional, falls du Alembic nutzt)
+alembic/versions/
+
+# MacOS Systemdateien
+.DS_Store
