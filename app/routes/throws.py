@@ -8,7 +8,7 @@ from app.crud.throw_crud import create_throw, get_throws_by_game
 
 router = APIRouter(
     prefix="/throws",
-    tags=["throws"]
+    tags=["Throws"]
 )
 
 

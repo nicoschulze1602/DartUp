@@ -8,7 +8,7 @@ from app.crud.game_crud import create_game, get_game, get_games_by_user, finish_
 
 router = APIRouter(
     prefix="/games",
-    tags=["games"]
+    tags=["Games"]
 )
 
 
@@ -42,7 +42,7 @@ async def read_games_by_user(user_id: int, db: AsyncSession = Depends(get_db)):
 @router.put("/{game_id}/finish", response_model=GameOut)
 async def finish_game_endpoint(game_id: int, db: AsyncSession = Depends(get_db)):
     """
-    Beende ein Spiel (setzt finished_at).
+    Beende ein Spiel (setzt end_time).
     """
     game = await finish_game(db, game_id)
     if not game:

@@ -4,18 +4,12 @@ from typing import Optional
 
 # ---------- Gemeinsame Basis ----------
 class GameBase(BaseModel):
-    """
-    Felder, die für mehrere Game-Schemas gleich sind.
-    """
-    mode: str  # z. B. "501", "301"
+    game_mode_id: int  # FK zu game_modes
 
 
 # ---------- Eingabe-Schema ----------
 class GameCreate(GameBase):
-    """
-    Eingabe beim Erstellen eines neuen Spiels.
-    """
-    user_id: int  # welcher Spieler hat das Spiel gestartet?
+    starter_id: int  # User, der das Spiel erstellt
 
 
 # ---------- Ausgabe-Schema ----------

@@ -9,11 +9,15 @@ async def get_user_by_username(db: AsyncSession, username: str):
     return result.scalars().first()
 
 
-async def create_user(db: AsyncSession, username: str, hashed_pw: str) -> User:
+async def create_user(db: AsyncSession, username: str, email: str, hashed_pw: str) -> User:
+    """
+    Neuen User in der DB speichern.
+    """
     new_user = User(
         username=username,
+        email=email,
         password_hash=hashed_pw,
-        created_at=datetime.now(UTC)  # <--- NEU: explizit setzen
+        created_at=datetime.now(UTC)  # explizit setzen
     )
     db.add(new_user)
     await db.commit()

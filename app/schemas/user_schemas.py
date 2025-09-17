@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     Felder, die in mehreren User-Schemas geteilt werden.
     """
     username: str
+    email: EmailStr  # <--- Email jetzt Teil der Basis
 
 
 # ---------- Eingabe-Schemas ----------
@@ -18,10 +19,11 @@ class UserCreate(UserBase):
     password: str
 
 
-class UserLogin(UserBase):
+class UserLogin(BaseModel):
     """
     Wird beim Login genutzt.
     """
+    username: str
     password: str
 
 

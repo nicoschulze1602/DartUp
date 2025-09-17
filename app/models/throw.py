@@ -4,15 +4,16 @@ from app.database import Base
 
 
 class Throw(Base):
-    """
-    SQLAlchemy model representing a dart throw in a game.
-    """
     __tablename__ = "throws"
 
     id = Column(Integer, primary_key=True, index=True)
     game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
-    value = Column(Integer, nullable=False)  # z. B. 20, 50, 0
-    multiplier = Column(Integer, default=1, nullable=False)  # 1 = Single, 2 = Double, 3 = Triple
+    participant_id = Column(Integer, ForeignKey("game_participants.id"), nullable=False)
+    value = Column(Integer, nullable=False)  # Punktewert, z. B. 20, 50, 0
+    multiplier = Column(Integer, default=1)  # 1=Single, 2=Double, 3=Triple
+    turn_number = Column(Integer, nullable=False)
+    throw_number_in_turn = Column(Integer, nullable=False)
 
-    # Beziehung zur Game-Tabelle
+    # Relationships
     game = relationship("Game", back_populates="throws")
+    participant = relationship("GameParticipant", back_populates="throws")
