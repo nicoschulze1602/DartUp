@@ -12,12 +12,23 @@ router = APIRouter(
 )
 
 
+
 @router.post("/", response_model=ThrowOut)
 async def add_throw(throw_data: ThrowCreate, db: AsyncSession = Depends(get_db)):
     """
-    Speichere einen neuen Wurf für ein Spiel.
+    Füge einen Wurf hinzu und berechne den neuen Spielstand.
     """
-    return await create_throw(db, throw_data)
+    new_throw, result = await create_throw(db, throw_data)
+
+    if not new_throw:
+        raise HTTPException(status_code=404, detail=result)
+
+    # Ergebnis (Bust, Win, OK) zusätzlich in die Response
+    return {
+        **new_throw.__dict__,
+        "status": result["status"],
+        "remaining": result["remaining"]
+    }
 
 
 @router.get("/game/{game_id}", response_model=List[ThrowOut])

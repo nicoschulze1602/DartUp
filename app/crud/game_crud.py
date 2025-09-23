@@ -6,29 +6,51 @@ from datetime import datetime, UTC
 
 from app.models.game import Game
 from app.models.game_participant import GameParticipant
+from app.models.game_mode import GameMode
 from app.schemas.game_schemas import GameCreate
 
 
-async def create_game(db: AsyncSession, game_data: GameCreate) -> Game:
+async def create_game(db: AsyncSession, game_data: GameCreate, current_user) -> Game:
     """
-    Neues Spiel in der DB anlegen + Starter als GameParticipant eintragen.
+    Neues Spiel in der DB anlegen.
+    Starter ist der eingeloggte User (current_user).
+    Gegner kommt aus game_data.opponent_id.
+    Beide werden automatisch als GameParticipants eingetragen.
     """
-    # Neues Spiel anlegen
+    # Gewählten GameMode laden
+    result = await db.execute(select(GameMode).where(GameMode.id == game_data.game_mode_id))
+    mode = result.scalars().first()
+    if not mode:
+        raise ValueError("Invalid game_mode_id")
+
+    # Neues Spiel anlegen (Starter ist current_user)
     new_game = Game(
-        user_id=game_data.starter_id,       # Starter / Owner
+        user_id=current_user.id,
         game_mode_id=game_data.game_mode_id
     )
     db.add(new_game)
     await db.flush()  # sorgt dafür, dass new_game.id verfügbar ist
 
-    # Starter automatisch als Teilnehmer hinzufügen
+    # Startscore aus dem Modus übernehmen
+    starter_score = mode.starting_score if mode.starting_score is not None else 0
+
+    # Starter hinzufügen
     starter_participant = GameParticipant(
         game_id=new_game.id,
-        user_id=game_data.starter_id,
-        starting_score=501,   # TODO: dynamisch machen je nach GameMode
-        current_score=501
+        user_id=current_user.id,
+        starting_score=starter_score,
+        current_score=starter_score
     )
     db.add(starter_participant)
+
+    # Gegner hinzufügen
+    opponent_participant = GameParticipant(
+        game_id=new_game.id,
+        user_id=game_data.opponent_id,
+        starting_score=starter_score,
+        current_score=starter_score
+    )
+    db.add(opponent_participant)
 
     # Alles speichern
     await db.commit()

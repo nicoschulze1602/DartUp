@@ -31,3 +31,16 @@ async def get_db():
     """
     async with AsyncSessionLocal() as session:
         yield session
+
+
+# 6) Function to create all tables
+async def init_db():
+    """
+    Droppt ALLE Tabellen und erstellt sie neu.
+    Nur für Dev/Reset nutzen – nicht in Produktion!
+    """
+    async with engine.begin() as conn:
+        # ALLE Tabellen löschen
+        await conn.run_sync(Base.metadata.drop_all)
+        # Tabellen neu anlegen
+        await conn.run_sync(Base.metadata.create_all)

@@ -5,7 +5,7 @@ from app.database import get_db
 from app.schemas.statistic_schemas import StatisticCreate, StatisticOut
 from app.crud.statistic_crud import create_statistic, get_statistic_by_user
 
-router = APIRouter(prefix="/statistics", tags=["statistics"])
+router = APIRouter(prefix="/statistics", tags=["Statistics"])
 
 
 @router.post("/", response_model=StatisticOut)

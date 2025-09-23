@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
+from datetime import timedelta
 
-from app.schemas.user_schemas import UserCreate, UserLogin, UserOut
-from app.auth.auth_utils import hash_password, verify_password, create_access_token, get_current_user
+from app.models.user import User
+from app.schemas.user_schemas import UserCreate, UserOut, UserLogin
+from app.auth.auth_utils import hash_password, verify_password, get_current_user
+from app.auth.jwt_handler import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import get_db
-from app.crud.user_crud import get_user_by_username, create_user
+from app.crud.user_crud import get_user_by_username, create_user, get_all_users
 
-router = APIRouter()
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.post("/register", response_model=UserOut)
@@ -24,25 +28,47 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login")
-async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login(login_data: UserLogin, db: AsyncSession = Depends(get_db)):
     """
-    Log in a user by verifying their credentials and issuing a token.
+    Authentifiziert einen User und gibt ein JWT zurück.
     """
-    db_user = await get_user_by_username(db, user.username)
+    # User in DB suchen
+    user: User = await get_user_by_username(db, login_data.username)
 
-    if not db_user or not verify_password(user.password, db_user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid username or password"
-        )
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
 
-    access_token = create_access_token(data={"sub": db_user.username})
+    # Debug-Ausgaben
+    print("👉 Eingabe-PW:", login_data.password)
+    print("👉 Hash aus DB:", user.password_hash)
+
+    # Passwort prüfen
+    if not verify_password(login_data.password, user.password_hash):
+        print("❌ Passwortprüfung fehlgeschlagen")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    print("✅ Passwortprüfung erfolgreich")
+
+    # Token erstellen
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.get("/me", response_model=UserOut)
-async def get_my_profile(current_user: dict = Depends(get_current_user)):
+async def get_my_profile(current_user: User = Depends(get_current_user)):
     """
-    Get the profile of the currently authenticated user.
+    Gibt das Profil des eingeloggten Users zurück.
     """
     return current_user
+
+
+@router.get("/", response_model=List[UserOut])
+async def get_all_users_endpoint(db: AsyncSession = Depends(get_db)):
+    """
+    Gibt alle User zurück (ohne Passwörter).
+    """
+    return await get_all_users(db)
