@@ -63,7 +63,7 @@ async def get_my_profile(current_user: User = Depends(get_current_user)):
     """
     Gibt das Profil des eingeloggten Users zurück.
     """
-    return current_user
+    return UserOut.model_validate(current_user)
 
 
 @router.get("/", response_model=List[UserOut])
@@ -72,3 +72,4 @@ async def get_all_users_endpoint(db: AsyncSession = Depends(get_db)):
     Gibt alle User zurück (ohne Passwörter).
     """
     return await get_all_users(db)
+

@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 
 # ---------- Basis ----------
 class GameParticipantBase(BaseModel):
-    starting_score: int
     current_score: int
     finish_order: Optional[int] = None
 
@@ -20,6 +20,8 @@ class GameParticipantOut(GameParticipantBase):
     id: int
     game_id: int
     user_id: int
+    joined_at: datetime
+    finished_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

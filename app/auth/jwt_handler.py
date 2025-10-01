@@ -37,3 +37,4 @@ def decode_access_token(token: str) -> dict:
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
+

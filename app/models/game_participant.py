@@ -1,11 +1,13 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from app.database import Base
 
 
 class GameParticipant(Base):
     """
-    Table that links users to games and tracks their score.
+    Verknüpft einen User mit einem Game.
+    Speichert aktuellen Score + Reihenfolge + Timestamps.
     """
     __tablename__ = "game_participants"
 
@@ -13,9 +15,11 @@ class GameParticipant(Base):
     game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    starting_score = Column(Integer, nullable=False)
-    current_score = Column(Integer, nullable=False)
-    finish_order = Column(Integer, nullable=True)  # 1 = Sieger, 2 = Zweiter, ...
+    current_score = Column(Integer, nullable=False)   # Dynamisch während des Spiels
+    finish_order = Column(Integer, nullable=True)     # 1 = Sieger, 2 = Zweiter ...
+
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    finished_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     game = relationship("Game", back_populates="participants")

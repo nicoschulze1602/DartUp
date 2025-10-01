@@ -14,9 +14,6 @@ async def create_participant(db: AsyncSession, data: GameParticipantCreate) -> G
 
 
 async def get_participant(db: AsyncSession, participant_id: int) -> Optional[GameParticipant]:
-    """
-    Hole einen einzelnen Teilnehmer per ID.
-    """
     result = await db.execute(select(GameParticipant).where(GameParticipant.id == participant_id))
     return result.scalars().first()
 

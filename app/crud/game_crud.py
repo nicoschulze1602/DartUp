@@ -4,58 +4,64 @@ from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from datetime import datetime, UTC
 
+from app.models.user import User
 from app.models.game import Game
 from app.models.game_participant import GameParticipant
 from app.models.game_mode import GameMode
 from app.schemas.game_schemas import GameCreate
 
 
-async def create_game(db: AsyncSession, game_data: GameCreate, current_user) -> Game:
+async def create_game(db: AsyncSession, game_data: GameCreate, current_user: User) -> Game:
     """
-    Neues Spiel in der DB anlegen.
-    Starter ist der eingeloggte User (current_user).
-    Gegner kommt aus game_data.opponent_id.
-    Beide werden automatisch als GameParticipants eingetragen.
+    Neues Spiel in der DB anlegen + alle Participants erzeugen.
     """
-    # Gewählten GameMode laden
+    # 1. GameMode laden
     result = await db.execute(select(GameMode).where(GameMode.id == game_data.game_mode_id))
     mode = result.scalars().first()
     if not mode:
         raise ValueError("Invalid game_mode_id")
 
-    # Neues Spiel anlegen (Starter ist current_user)
+    # 2. Neues Spiel anlegen
     new_game = Game(
-        user_id=current_user.id,
-        game_mode_id=game_data.game_mode_id
+        user_id=current_user.id,     # Host = eingeloggter User
+        game_mode_id=game_data.game_mode_id,
+        status="ongoing"
     )
     db.add(new_game)
-    await db.flush()  # sorgt dafür, dass new_game.id verfügbar ist
+    await db.flush()
 
-    # Startscore aus dem Modus übernehmen
-    starter_score = mode.starting_score if mode.starting_score is not None else 0
+    # 3. Participants anlegen
+    participants = []
 
-    # Starter hinzufügen
-    starter_participant = GameParticipant(
+    # Host
+    participants.append(GameParticipant(
         game_id=new_game.id,
         user_id=current_user.id,
-        starting_score=starter_score,
-        current_score=starter_score
-    )
-    db.add(starter_participant)
+        starting_score=mode.starting_score,
+        current_score=mode.starting_score
+    ))
 
-    # Gegner hinzufügen
-    opponent_participant = GameParticipant(
-        game_id=new_game.id,
-        user_id=game_data.opponent_id,
-        starting_score=starter_score,
-        current_score=starter_score
-    )
-    db.add(opponent_participant)
+    # Gegner
+    for opp_id in game_data.opponent_ids:
+        participants.append(GameParticipant(
+            game_id=new_game.id,
+            user_id=opp_id,
+            starting_score=mode.starting_score,
+            current_score=mode.starting_score
+        ))
 
-    # Alles speichern
+    db.add_all(participants)
+
+    # 4. Alles speichern
     await db.commit()
     await db.refresh(new_game)
-    return new_game
+
+    result = await db.execute(
+        select(Game).options(
+            selectinload(Game.participants).selectinload(GameParticipant.user)
+        ).where(Game.id == new_game.id)
+    )
+    return result.scalars().first()
 
 
 async def get_game(db: AsyncSession, game_id: int) -> Optional[Game]:

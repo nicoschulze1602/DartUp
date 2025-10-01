@@ -1,23 +1,29 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
+from datetime import datetime
 
 
 class Game(Base):
     __tablename__ = "games"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Starter/Owner
     game_mode_id = Column(Integer, ForeignKey("game_modes.id"), nullable=False)
-    winner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Host
+    status = Column(String, default="pending")
+    start_time = Column(DateTime, default=datetime.utcnow)
+    end_time = Column(DateTime, nullable=True)
+    first_to = Column(Integer, default=1)
 
-    status = Column(String, nullable=False, default="ongoing")
-    start_time = Column(DateTime(timezone=True), server_default=func.now())
-    end_time = Column(DateTime(timezone=True), nullable=True)
+    # 🆕 Wer gerade dran ist
+    current_turn_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
-    # Relationships
-    user = relationship("User", back_populates="games", foreign_keys=[user_id])   # Starter
-    winner = relationship("User", foreign_keys=[winner_id])                       # Sieger
-    participants = relationship("GameParticipant", back_populates="game", cascade="all, delete-orphan")
-    throws = relationship("Throw", back_populates="game", cascade="all, delete-orphan")
+    # ---------- Relationships ----------
+    user = relationship("User", back_populates="games", foreign_keys=[user_id])  # Host
     game_mode = relationship("GameMode", back_populates="games")
+    participants = relationship("GameParticipant", back_populates="game",
+                                cascade="all, delete-orphan")
+    throws = relationship("Throw", back_populates="game", cascade="all, delete-orphan")
+
+    # 🆕 Relation zum aktiven Spieler
+    current_turn_user = relationship("User", foreign_keys=[current_turn_user_id])

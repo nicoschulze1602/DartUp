@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from app.database import get_db
-from app.schemas.throw_schemas import ThrowCreate, ThrowOut
+from app.schemas.throw_schemas import ThrowCreate, ThrowOut, ThrowResponse
 from app.crud.throw_crud import create_throw, get_throws_by_game
 
 router = APIRouter(
@@ -12,23 +12,17 @@ router = APIRouter(
 )
 
 
-
-@router.post("/", response_model=ThrowOut)
+@router.post("/", response_model=ThrowResponse)
 async def add_throw(throw_data: ThrowCreate, db: AsyncSession = Depends(get_db)):
     """
     Füge einen Wurf hinzu und berechne den neuen Spielstand.
     """
-    new_throw, result = await create_throw(db, throw_data)
+    response = await create_throw(db, throw_data)
 
-    if not new_throw:
-        raise HTTPException(status_code=404, detail=result)
+    if not response:
+        raise HTTPException(status_code=404, detail="Game or participant not found")
 
-    # Ergebnis (Bust, Win, OK) zusätzlich in die Response
-    return {
-        **new_throw.__dict__,
-        "status": result["status"],
-        "remaining": result["remaining"]
-    }
+    return response
 
 
 @router.get("/game/{game_id}", response_model=List[ThrowOut])

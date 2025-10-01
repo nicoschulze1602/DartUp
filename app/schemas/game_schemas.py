@@ -8,21 +8,30 @@ class GameCreate(BaseModel):
     """
     Eingabe beim Erstellen eines neuen Spiels.
     """
-    game_mode_id: int     # welcher Modus (z.B. 501, Cricket)
-    opponent_id: int      # welcher Gegenspieler (mind. 1 Gegner)
+    game_mode_id: int
+    opponent_ids: List[int]     # IDs der Gegenspieler
+    first_shot: Optional[str] = "host"  # host | random | opponent
+    first_to: Optional[int] = 1         # z. B. Best-of-X
 
 
 # ---------- Ausgabe-Schema ----------
+class ParticipantInGame(BaseModel):
+    user_id: int
+    username: str
+    starting_score: int
+    current_score: int
+    checkout_suggestion: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class GameOut(BaseModel):
-    """
-    Response-Schema für die API.
-    """
     id: int
     game_mode_id: int
-    starter_id: int
-    status: str
-    start_time: datetime
-    end_time: Optional[datetime] = None
+    user_id: int  # Host
+    first_shot: str
+    first_to: int
 
     class Config:
         from_attributes = True
@@ -48,4 +57,7 @@ class GameScoreboardOut(BaseModel):
     status: str
     start_time: datetime
     end_time: Optional[datetime] = None
-    participants: List[ParticipantScoreOut]
+    participants: List[ParticipantInGame]
+
+    class Config:
+        from_attributes = True
