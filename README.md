@@ -1,41 +1,48 @@
+# 🎯 DartUp Backend
 
-# 🏹 DartUp – Backend API
-
-**DartUp** ist eine moderne, leichtgewichtige Dart Counter App für Hobby-Spieler – mit Fokus auf Spaß, Spiellogik und umfangreichen Statistiken.
-
-Dieses Backend-Projekt wurde mit [Dart Frog](https://dartfrog.vgv.dev/) aufgebaut und stellt eine RESTful API zur Verfügung, die Spielverläufe, Nutzerprofile und Punktestände verwaltet.
+Das **DartUp Backend** ist die serverseitige API für eine moderne Dart-Trainings- und Statistik-App.  
+Es wurde mit **FastAPI** und **SQLAlchemy (Async)** entwickelt und simuliert vollständige Dartspiele (z. B. *501 Double Out*) inklusive Spiel-, Wurf- und Statistik-Logik.
 
 ---
-## 🚀 Key-Functions
 
-- Nutzerregistrierung & Login (JWT-Auth)
-- Spiele mit verschiedenen Modi (z. B. 501, 301)
-- Eingabe von Würfen (mit Bust-/Checkout-Logik)
-- Legs & Sets Verwaltung
-- Spielhistorie & Auswertung
-- Erweiterbar für Freunde, Heatmaps, u.v.m.
+## 🚀 Features
+
+- **Spielmodi & Simulation**
+  - Vollständige Spielsimulation (Turn-basiert, Double-Out-Regeln)
+  - Wurf-Validierung & Turnwechsel-Logik
+  - Realistische Checkout-Empfehlungen
+
+- **Statistiken**
+  - Laufende Spiel- und Wurfstatistiken pro Spieler
+  - Automatische Berechnung von 3-Dart-Averages, Highscores usw.
+
+- **Persistenz**
+  - PostgreSQL-Datenbank mit SQLAlchemy (Async)
+  - Datenbankmigrationen via Alembic (optional)
+
+- **API**
+  - OpenAPI/Swagger-Dokumentation automatisch unter `/docs`
+  - JSON-Schemas für Games, Participants, Throws etc.
 
 ---
-## 🧱 Projektstruktur (vereinfacht)
-dartup_backend/
-├── routes/           → API-Endpunkte
-├── models/           → Datenmodelle (User, Game, Throw)
-├── services/         → Spiellogik, Auth, Statistiken
-├── data/             → DB-Verbindung & Queries
-├── utils/            → Helferfunktionen
-└── bin/server.dart   → Einstiegspunkt für den Server
+
+## 🧱 Technologie-Stack
+
+| Komponente | Technologie |
+|-------------|--------------|
+| Framework | [FastAPI](https://fastapi.tiangolo.com/) |
+| Datenbank | PostgreSQL (lokal oder Render Cloud) |
+| ORM | SQLAlchemy (Async) |
+| Server | Uvicorn |
+| Deployment | Render.com |
+| Sprache | Python 3.11+ |
 
 ---
-## ⚙️ Setup
 
-Voraussetzungen:
-- Dart SDK (≥3.0)
-- PostgreSQL (optional: Supabase)
-- Dart Frog CLI
+## ⚙️ Lokale Entwicklung
+
+### 1. Projekt klonen
 
 ```bash
-# Dart Frog installieren (falls noch nicht vorhanden)
-dart pub global activate dart_frog_cli
-
-# Projekt starten
-dart_frog dev
+git clone https://github.com/DEINUSERNAME/dartup-backend.git
+cd dartup-backend
