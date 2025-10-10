@@ -1,5 +1,5 @@
 from app.models.throw import Throw
-from app.models.game_participant import GameParticipant
+
 
 class TurnService:
 
@@ -19,21 +19,32 @@ class TurnService:
             # noch im selben Turn
             return last_throw.turn_number, last_throw.throw_number_in_turn + 1, darts_thrown
         else:
-            # next turn
+            # nächster Turn
             return last_throw.turn_number + 1, 1, darts_thrown
 
     @staticmethod
-    def get_next_player(game, current_participant: GameParticipant, status: str, throw_number_in_turn: int) -> str:
+    def get_next_player(game, current_participant, status: str, throw_number_in_turn: int) -> str:
         """
-        Entscheidet, wer als nächstes werfen darf.
+        Entscheidet, wer als Nächstes werfen darf.
+        Erwartet ORM-Objekte (Game und GameParticipant), kein JSON.
         """
         participants = game.participants
-        current_index = participants.index(current_participant)
+        if not participants:
+            return "Unbekannter Spieler"
 
+        # aktuellen Index im Spiel finden
+        current_index = next(
+            (i for i, p in enumerate(participants) if p.id == current_participant.id),
+            None
+        )
+
+        if current_index is None:
+            return "Unbekannter Spieler"
+
+        # Wenn Wurfserie vorbei oder Runde gewonnen/gebust → nächster Spieler
         if status in ["BUST", "WIN"] or throw_number_in_turn == 3:
-            # next players turn
             next_index = (current_index + 1) % len(participants)
             return participants[next_index].user.username
-        else:
-            # same player (next dart)
-            return f"{current_participant.user.username} (nächster Dart)"
+
+        # sonst bleibt der gleiche Spieler dran
+        return f"{current_participant.user.username} (nächster Dart)"

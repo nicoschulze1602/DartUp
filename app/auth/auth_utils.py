@@ -27,7 +27,6 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db)
 ):
     token = creds.credentials   # JWT als string
-    print("Debugging:", end="\n")
     print("🔑 Erhaltener Token:", token)
 
     payload = decode_access_token(token)

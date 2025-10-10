@@ -12,6 +12,7 @@ from app.routes import (
     statistics,
     friendships,
     game_participants,
+    game_simulation,
 )
 
 # ----------- APP CONFIG -----------
@@ -29,8 +30,15 @@ app.include_router(game_modes.router, prefix="/game-modes", tags=["Game Modes"])
 app.include_router(statistics.router, prefix="/statistics", tags=["Statistics"])
 app.include_router(friendships.router, prefix="/friendships", tags=["Friendships"])
 app.include_router(game_participants.router, prefix="/participants", tags=["Participants"])
+app.include_router(game_simulation.router, prefix="/game-simulation", tags=["Game Simulation"])
 
 # ----------- ROOT ENDPOINT -----------
 @app.get("/", tags=["Root"])
 async def root():
-    return {"message": "🎯 Welcome to DartUp API! Visit /docs for Swagger UI."}
+    return {"message": "Hello and Welcome to DartUp! 🎯 \n"
+                       "I am building an online darts platform packed with powerful "
+                       "statistics and diverse game modes, including X01, Cricket, Shanghai, "
+                       "and various training games to seriously level up your darts game.\n"
+                       "Heads-up: Our frontend is still under construction.. "
+                       "but don't be shy to explore the Swagger UI at the /docs route! :-)\n"
+                       "Have fun exploring!. :-)"}

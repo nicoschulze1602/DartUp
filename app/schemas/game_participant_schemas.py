@@ -20,6 +20,7 @@ class GameParticipantOut(GameParticipantBase):
     id: int
     game_id: int
     user_id: int
+    username: str
     joined_at: datetime
     finished_at: Optional[datetime] = None
 

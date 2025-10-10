@@ -15,8 +15,9 @@ class GameParticipant(Base):
     game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    current_score = Column(Integer, nullable=False)   # Dynamisch während des Spiels
-    finish_order = Column(Integer, nullable=True)     # 1 = Sieger, 2 = Zweiter ...
+    starting_score = Column(Integer, nullable=False)
+    current_score = Column(Integer, nullable=False)
+    finish_order = Column(Integer, nullable=True)
 
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
     finished_at = Column(DateTime(timezone=True), nullable=True)
