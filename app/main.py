@@ -2,6 +2,7 @@ import sys, os
 sys.path.append(os.path.dirname(__file__))
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
 # Import routers
 from app.routes import (
@@ -19,7 +20,19 @@ from app.routes import (
 app = FastAPI(
     title="DartUp API",
     version="1.0.0",
-    description="🎯 API for managing dart games, users, and statistics."
+    description="""
+**DartUp API** – A modern and fully asynchronous backend for managing dart games, players, and statistics.  
+
+This service provides structured endpoints for:
+- 👤 **User Management:** Registration, authentication, and JWT-based login  
+- 🎯 **Game Logic:** Create games, record throws, and calculate results  
+- 📈 **Analytics:** Retrieve detailed performance and match statistics  
+
+Built with **FastAPI**, **SQLAlchemy (async)**, and **PostgreSQL**,  
+deployed via **Render** for easy scalability and continuous integration.  
+
+For more details, explore the available endpoints below or visit the project documentation.  
+"""
 )
 
 # ----------- ROUTES EINBINDEN -----------
@@ -33,12 +46,20 @@ app.include_router(game_participants.router, prefix="/participants", tags=["Part
 app.include_router(game_simulation.router, prefix="/game-simulation", tags=["Game Simulation"])
 
 # ----------- ROOT ENDPOINT -----------
-@app.get("/", tags=["Root"])
+@app.get("/", tags=["Welcome"])
 async def root():
-    return {"message": "Hello and Welcome to DartUp! 🎯 \n"
-                       "I am building an online darts platform packed with powerful "
-                       "statistics and diverse game modes, including X01, Cricket, Shanghai, "
-                       "and various training games to seriously level up your darts game.\n"
-                       "Heads-up: Our frontend is still under construction.. "
-                       "but don't be shy to explore the Swagger UI at the /docs route! :-)\n"
-                       "Have fun exploring!. :-)"}
+    """
+    Friendly entry point for the DartUp API 🎯
+    """
+    return JSONResponse(
+        content={
+            "message": "🎯 Welcome to the DartUp API!",
+            "info": "Manage dart games, users, and statistics with ease.",
+            "documentation": {
+                "Swagger UI": "/docs",
+                "ReDoc": "/redoc"
+            },
+            "version": "1.0.0",
+            "status": "online"
+        }
+    )

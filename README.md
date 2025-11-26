@@ -1,6 +1,6 @@
 # 🎯 DartUp Backend
 
-Das **DartUp Backend** ist die serverseitige API für eine moderne Dart-Trainingsapp mit Nutzerprofilen, umfangreichen Statistiken und etlichen Spielmodi.  
+Das **DartUp Backend** ist die serverseitige API für eine moderne Dart-Trainingsapp mit Nutzerprofilen, umfangreichen Statistiken und zahlreichen Spielmodi.  
 Es wurde mit **FastAPI** und **SQLAlchemy (Async)** entwickelt und simuliert vollständige Dartspiele (z. B. *501 Double Out*) inklusive Spiel-, Wurf- und Statistik-Logik.
 
 ---
@@ -29,22 +29,18 @@ Es wurde mit **FastAPI** und **SQLAlchemy (Async)** entwickelt und simuliert vol
 ## 🧱 Technologie-Stack
 
 | Komponente | Technologie |
-|-------------|--------------|
-| Framework | [FastAPI](https://fastapi.tiangolo.com/) |
-| Datenbank | PostgreSQL (lokal oder Render Cloud) |
-| ORM | SQLAlchemy (Async) |
-| Server | Uvicorn |
+| Framework  | [FastAPI](https://fastapi.tiangolo.com/) |
+| Datenbank  | PostgreSQL (lokal oder Render Cloud) |
+| ORM        | SQLAlchemy (Async) |
+| Server     | Uvicorn |
 | Deployment | Render.com |
-| Sprache | Python 3.11+ |
+| Sprache    | Python 3.11+ |
 
 ---
-
 ## ⚙️ Lokale Entwicklung
-
 ### 1. Projekt klonen
     git clone https://github.com/DEINUSERNAME/dartup-backend.git
     cd dartup-backend
-
 
 ### 2. Virtuelle Umgebung & Dependencies
     python -m venv venv

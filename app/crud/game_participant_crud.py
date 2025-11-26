@@ -1,26 +1,45 @@
+from typing import Optional, List
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+
 from app.models.game_participant import GameParticipant
-from app.schemas.game_participant_schemas import GameParticipantCreate
-from typing import List, Optional
 
 
-async def create_participant(db: AsyncSession, data: GameParticipantCreate) -> GameParticipant:
+# -------------------------------
+# CREATE
+# -------------------------------
+async def create_participant(
+    db: AsyncSession,
+    game_id: int,
+    user_id: int,
+    starting_score: int,
+) -> GameParticipant:
     """
-    Erstellt einen neuen Teilnehmer in der Datenbank.
+    Legt einen neuen GameParticipant an.
+    (Validierung wie 'user exists?' gehört in den Service.)
     """
-    participant = GameParticipant(**data.dict())
+    participant = GameParticipant(
+        game_id=game_id,
+        user_id=user_id,
+        starting_score=starting_score,
+        current_score=starting_score,
+    )
+
     db.add(participant)
     await db.commit()
     await db.refresh(participant)
     return participant
 
 
-async def get_participant(db: AsyncSession, participant_id: int) -> Optional[GameParticipant]:
-    """
-    Holt einen einzelnen Teilnehmer inkl. zugehörigem User & Throws.
-    """
+# -------------------------------
+# READ: by participant_id
+# -------------------------------
+async def get_participant(
+    db: AsyncSession,
+    participant_id: int
+) -> Optional[GameParticipant]:
+
     result = await db.execute(
         select(GameParticipant)
         .options(
@@ -32,16 +51,51 @@ async def get_participant(db: AsyncSession, participant_id: int) -> Optional[Gam
     return result.scalars().first()
 
 
-async def get_participants_by_game(db: AsyncSession, game_id: int) -> List[GameParticipant]:
-    """
-    Holt alle Teilnehmer eines Spiels inkl. zugehörigem User & Throws.
-    """
+# -------------------------------
+# READ: all by game_id
+# -------------------------------
+async def get_participants_by_game(
+    db: AsyncSession,
+    game_id: int
+) -> List[GameParticipant]:
+
     result = await db.execute(
         select(GameParticipant)
         .options(
             selectinload(GameParticipant.user),
-            selectinload(GameParticipant.throws)
+            selectinload(GameParticipant.throws),
         )
         .where(GameParticipant.game_id == game_id)
     )
-    return result.scalars().all()
+    return result.scalars().unique().all()
+
+
+# -------------------------------
+# UPDATE: Participant speichern
+# -------------------------------
+async def update_participant(
+    db: AsyncSession,
+    participant: GameParticipant
+) -> GameParticipant:
+
+    db.add(participant)
+    await db.commit()
+    await db.refresh(participant)
+    return participant
+
+async def get_participant_by_game_and_user(
+    db: AsyncSession,
+    game_id: int,
+    user_id: int
+) -> GameParticipant | None:
+    """
+    Holt genau *einen* Participant basierend auf Spiel + User.
+    Wird für den GameService benötigt.
+    """
+    result = await db.execute(
+        select(GameParticipant)
+        .options(selectinload(GameParticipant.user))
+        .where(GameParticipant.game_id == game_id)
+        .where(GameParticipant.user_id == user_id)
+    )
+    return result.scalars().first()

@@ -1,76 +1,100 @@
+from app.models.game_participant import GameParticipant
 from app.models.throw import Throw
 from app.models.game import Game
-from app.models.game_participant import GameParticipant
-from app.services.turn_service import TurnService
 
 
 class GameEngine:
     """
-    Spiellogik für verschiedene Dart-Spielmodi.
+    Pure Spiellogik — verarbeitet einen Wurf basierend auf dem GameMode.
+    Führt KEINE DB-Aktionen aus.
     """
+
     @staticmethod
-    def apply_throw(game: Game, participant: GameParticipant, throw: Throw):
+    def apply_throw(game: Game, participant: GameParticipant, throw: Throw) -> dict:
         """
-        Führt einen Dartwurf aus, berechnet neue Punkte und prüft Turnende.
-        Enthält einfache print()-Debug-Ausgaben.
+        Entscheidet, welche Spiellogik angewendet wird.
+        Gibt zurück:
+        {
+            "status": "OK" | "BUST" | "WIN",
+            "remaining": <punkte>
+        }
         """
-        if game.game_mode.name != "501 Double Out":
-            raise ValueError(f"Unbekannter Spielmodus: {game.game_mode.name}")
 
-        prev_score = participant.current_score
-        result = GameEngine._play_501(participant, throw)
-        new_score = participant.current_score
+        mode = game.game_mode  # enthält: starting_score, scoring_type, checkout_rule, name
 
-        print(f"🎯 {participant.user.username} wirft {throw.value}x{throw.multiplier} "
-              f"= {throw.value * throw.multiplier} Punkte | "
-              f"Score: {prev_score} → {new_score} ({result['status']})")
+        # Dynamisch entscheiden
+        if mode.scoring_type == "subtract":
+            return GameEngine._play_subtract_mode(participant, throw, mode)
 
-        # ✅ Wenn Turnende → Spielerwechsel
-        if result["status"] in ["BUST", "WIN"] or throw.throw_number_in_turn == 3:
-            next_player_name = TurnService.get_next_player(
-                game, participant, result["status"], throw.throw_number_in_turn
-            )
-            next_participant = next(
-                (p for p in game.participants if p.user.username == next_player_name.split()[0]),
-                None
-            )
-            if next_participant:
-                game.current_turn_user_id = next_participant.user_id
-                print(f"🔁 Nächster Spieler: {next_participant.user.username}")
+        elif mode.scoring_type == "add":
+            return GameEngine._play_add_mode(participant, throw, mode)
 
-        # 🏆 Spiel beenden, falls Sieg
-        if result["status"] == "WIN":
-            game.status = "finished"
-            print(f"🏁 Spiel beendet! Gewinner: {participant.user.username}")
+        else:
+            raise ValueError(f"Unsupported scoring_type: {mode.scoring_type}")
 
-        return result
-
-    # ---------- 501 Double Out ----------
+    # -------------------------------------------------------------------------
+    # 1️⃣ Klassische X01-Modi (subtract)
+    # -------------------------------------------------------------------------
     @staticmethod
-    def _play_501(participant: GameParticipant, throw: Throw):
+    def _play_subtract_mode(participant: GameParticipant, throw: Throw, mode) -> dict:
+        """
+        Standard X01 Regelwerk: subtract scoring + optional checkout rules.
+        """
         points = throw.value * throw.multiplier
         new_score = participant.current_score - points
 
         # ❌ Überworfen
         if new_score < 0:
-            print(f"💥 BUST: {participant.user.username} überwirft!")
             return {"status": "BUST", "remaining": participant.current_score}
 
-        # ❌ 1 Punkt = nicht auscheckbar → Bust
-        if new_score == 1:
-            print(f"🚫 BUST: {participant.user.username} bleibt bei 1 Punkt (nicht auscheckbar).")
+        # ❌ 1 Punkt = nicht auscheckbar → Bust (nur bei Double-Out)
+        if new_score == 1 and mode.checkout_rule == "double":
             return {"status": "BUST", "remaining": participant.current_score}
 
-        # ✅ Sieg (Double Out)
+        # 🎯 Sieg?
         if new_score == 0:
-            if throw.multiplier == 2 or (throw.value == 25 and throw.multiplier == 2):
+            if GameEngine._is_valid_checkout(throw, mode):
                 participant.current_score = 0
-                print(f"🏆 {participant.user.username} checkt mit Double Out!")
                 return {"status": "WIN", "remaining": 0}
             else:
-                print(f"😬 Kein Double Out! Bust für {participant.user.username}.")
                 return {"status": "BUST", "remaining": participant.current_score}
 
-        # Normaler Treffer
+        # ✔ Normaler Treffer
         participant.current_score = new_score
         return {"status": "OK", "remaining": new_score}
+
+    # -------------------------------------------------------------------------
+    # 2️⃣ Add-Modi (Cricket, Shanghai etc.)
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _play_add_mode(participant: GameParticipant, throw: Throw, mode) -> dict:
+        """
+        Beispielhafte add-Logic (kann später erweitert werden).
+        """
+        points = throw.value * throw.multiplier
+        participant.current_score += points
+
+        # Keine Busts, keine Checkout-Regeln
+        return {
+            "status": "OK",
+            "remaining": participant.current_score
+        }
+
+    # -------------------------------------------------------------------------
+    # 3️⃣ Checkout-Regel prüfen
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _is_valid_checkout(throw: Throw, mode) -> bool:
+        """
+        Prüft, ob der Wurf ein gültiges Checkout ist.
+        mode.checkout_rule: "double", "straight", None
+        """
+
+        if mode.checkout_rule == "double":
+            return throw.multiplier == 2 or (throw.value == 25 and throw.multiplier == 2)
+
+        if mode.checkout_rule == "straight":
+            return True
+
+        # Keine Checkout-Regel → alles erlaubt
+        return True

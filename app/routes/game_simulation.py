@@ -11,13 +11,12 @@ from app.models.throw import Throw
 from app.services.turn_service import TurnService
 from app.services.game_engine import GameEngine
 from app.services.throw_validation_service import ValidationService  # ✅ für gültige Würfe
-from app.routes.games import get_scoreboard
 from app.schemas.game_schemas import GameScoreboardOut
 
 router = APIRouter(tags=["Game Simulation"])
 
 
-# 🧩 Checkout-Helfer
+# 🧩Checkout-Helfer
 def get_checkout_throw(score: int):
     """Gibt bei möglichem Finish einen gezielten Double-Versuch zurück."""
     checkout_table = {

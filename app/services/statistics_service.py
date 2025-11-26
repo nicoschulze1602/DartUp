@@ -11,7 +11,6 @@ class StatisticsService:
     """
     Verwaltet Benutzerstatistiken basierend auf Spiel- und Wurfdaten.
     """
-
     # ----------------------------------------------------------
     # 🧾 Statistik-Objekt abrufen oder erstellen
     # ----------------------------------------------------------

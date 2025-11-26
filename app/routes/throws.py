@@ -1,50 +1,54 @@
+# app/routes/throw_routes.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 
 from app.database import get_db
-from app.schemas.throw_schemas import ThrowCreate, ThrowResponse, ThrowOut
-from app.crud.throw_crud import create_throw, get_throws_by_game
+from app.schemas.throw_schemas import ThrowCreate, ThrowResponse
+from app.services.throw_service import ThrowService
 
-router = APIRouter(
-    prefix="/throws",
-    tags=["Throws"]
-)
+router = APIRouter(prefix="/throws", tags=["Throws"])
 
 
 # ---------------------------------------------------------
-# 🎯 Wurf ausführen
+# 🎯 1. Neuen Wurf ausführen
 # ---------------------------------------------------------
 @router.post("/", response_model=ThrowResponse)
-async def add_throw(throw_data: ThrowCreate, db: AsyncSession = Depends(get_db)):
+async def add_throw(
+    data: ThrowCreate,
+    db: AsyncSession = Depends(get_db)
+):
     """
-    Fügt einen neuen Wurf hinzu, berechnet Position im Turn,
-    prüft Sieg/Bust und gibt den neuen Spielstatus zurück.
+    Führt einen Dart-Wurf aus:
+    - Validierung
+    - Turn/Throw-Berechnung
+    - GameEngine anwenden
+    - Throw speichern
+    - Nächsten Spieler bestimmen
+    - API-Response zurückgeben
     """
-    response = await create_throw(db, throw_data)
+    result = await ThrowService.process_throw(db, data)
 
-    # Fehlerbehandlung
-    if not response:
-        raise HTTPException(status_code=400, detail="Invalid throw data")
+    if result is None:
+        raise HTTPException(status_code=400, detail="Invalid throw input")
 
-    # Falls create_throw ein Tupel (None, str) zurückgibt
-    if isinstance(response, tuple):
-        _, error_message = response
-        raise HTTPException(status_code=400, detail=error_message)
-
-    return response
+    return result
 
 
 # ---------------------------------------------------------
-# 📜 Alle Würfe eines Spiels abrufen
+# 📜 2. Alle Würfe eines Spiels abrufen
 # ---------------------------------------------------------
-@router.get("/game/{game_id}", response_model=List[ThrowOut])
-async def read_throws_for_game(game_id: int, db: AsyncSession = Depends(get_db)):
+@router.get("/game/{game_id}", response_model=list[ThrowResponse])
+async def get_throws_for_game(
+    game_id: int,
+    db: AsyncSession = Depends(get_db)
+):
     """
-    Gibt alle Würfe eines bestimmten Spiels zurück.
+    Gibt alle gespeicherten Würfe für ein Game zurück.
+    (ohne Spiellogik)
     """
-    throws = await get_throws_by_game(db, game_id)
+    throws = await ThrowService.list_throws_for_game(db, game_id)
+
     if not throws:
-        raise HTTPException(status_code=404, detail="No throws found for this game")
+        raise HTTPException(status_code=404, detail="No throws found")
 
     return throws
