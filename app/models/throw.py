@@ -19,5 +19,5 @@ class Throw(Base):
     timestamp = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    game = relationship("Game", back_populates="throws")
-    participant = relationship("GameParticipant", back_populates="throws")
+    game = relationship("Game", back_populates="throws", lazy="selectin")
+    participant = relationship("GameParticipant", back_populates="throws", lazy="selectin")

@@ -1,4 +1,3 @@
-# app/routes/throw_routes.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,7 +5,7 @@ from app.database import get_db
 from app.schemas.throw_schemas import ThrowCreate, ThrowResponse
 from app.services.throw_service import ThrowService
 
-router = APIRouter(prefix="/throws", tags=["Throws"])
+router = APIRouter(tags=["Throws"])
 
 
 # ---------------------------------------------------------

@@ -23,6 +23,6 @@ class GameParticipant(Base):
     finished_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    game = relationship("Game", back_populates="participants")
-    user = relationship("User", back_populates="participants")
-    throws = relationship("Throw", back_populates="participant", cascade="all, delete-orphan")
+    game = relationship("Game", back_populates="participants", lazy="selectin")
+    user = relationship("User", back_populates="participants", lazy="selectin")
+    throws = relationship("Throw", back_populates="participant", cascade="all, delete-orphan", lazy="selectin")

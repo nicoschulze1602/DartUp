@@ -10,7 +10,7 @@ from app.schemas.game_schemas import GameCreate, GameOut
 from app.services.game_service import GameService
 from app.crud.game_crud import get_games_by_user_entity
 
-router = APIRouter(prefix="/games", tags=["Games"])
+router = APIRouter(tags=["Games"])
 
 
 # -------------------------------------------------------------

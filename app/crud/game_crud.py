@@ -9,14 +9,8 @@ from app.models.game_participant import GameParticipant
 from app.models.game_mode import GameMode
 
 
-# ------------------------
-# Read: vollständiges Game laden (inkl. participants, deren user, throws, game_mode)
-# ------------------------
+# Vollständiges Game inkl. Relationen
 async def get_game_entity(db: AsyncSession, game_id: int) -> Optional[Game]:
-    """
-    Liefert das vollständige Game-Objekt (ORM) mit geladenen Relationen.
-    Wird von Services verwendet, die mit dem ORM-Objekt arbeiten wollen.
-    """
     result = await db.execute(
         select(Game)
         .options(
@@ -29,17 +23,25 @@ async def get_game_entity(db: AsyncSession, game_id: int) -> Optional[Game]:
     return result.scalars().first()
 
 
-# ------------------------
-# Read: Raw Game (ohne Relationen)
-# ------------------------
+# --- WICHTIG ---
+async def get_game(db: AsyncSession, game_id: int) -> Optional[Game]:
+    """Von Tests und Services erwartete Wrapper-Funktion."""
+    return await get_game_raw(db, game_id)
+
+
 async def get_game_raw(db: AsyncSession, game_id: int) -> Optional[Game]:
-    """Einfaches Game-Objekt ohne große Laden-Logik."""
     return await db.get(Game, game_id)
 
 
-# ------------------------
-# Create: neues Spiel
-# ------------------------
+async def get_game_with_participants(db: AsyncSession, game_id: int):
+    result = await db.execute(
+        select(Game)
+        .options(selectinload(Game.participants).selectinload(GameParticipant.user))
+        .where(Game.id == game_id)
+    )
+    return result.scalars().first()
+
+
 async def create_game(
     db: AsyncSession,
     host_id: int,
@@ -76,7 +78,7 @@ async def create_game(
         )
     ]
 
-    for oid in (opponent_ids or []):
+    for oid in opponent_ids or []:
         participants.append(
             GameParticipant(
                 game_id=new_game.id,
@@ -92,9 +94,6 @@ async def create_game(
     return new_game
 
 
-# ------------------------
-# Update
-# ------------------------
 async def update_game(db: AsyncSession, game: Game) -> Game:
     db.add(game)
     await db.commit()
@@ -102,9 +101,6 @@ async def update_game(db: AsyncSession, game: Game) -> Game:
     return game
 
 
-# ------------------------
-# Finish
-# ------------------------
 async def finish_game(db: AsyncSession, game_id: int) -> Optional[Game]:
     game = await get_game_entity(db, game_id)
     if not game:
@@ -118,9 +114,6 @@ async def finish_game(db: AsyncSession, game_id: int) -> Optional[Game]:
     return game
 
 
-# ------------------------
-# Query: alle Spiele eines Users
-# ------------------------
 async def get_games_by_user_entity(db: AsyncSession, user_id: int) -> List[Game]:
     result = await db.execute(
         select(Game)

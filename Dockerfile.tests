@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+# 1) Arbeitsverzeichnis
+WORKDIR /app
+
+# 2) requirements kopieren und installieren
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3) Dummy-ENV Variablen für Tests setzen
+#    FastAPI benötigt SECRET_KEY / ALGORITHM
+#    DATABASE_URL ist egal, weil conftest.py In-Memory SQLite benutzt.
+ENV SECRET_KEY="test-secret-key"
+ENV ALGORITHM="HS256"
+ENV DATABASE_URL="sqlite+aiosqlite:///:memory:"
+
+# 4) Quellcode + Tests kopieren
+COPY app ./app
+COPY tests ./tests
+
+# 5) pytest starten
+CMD ["pytest", "-q"]

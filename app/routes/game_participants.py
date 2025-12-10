@@ -10,7 +10,7 @@ from app.crud.game_participant_crud import (
     get_participants_by_game
 )
 
-router = APIRouter(prefix="/participants", tags=["Participants"])
+router = APIRouter(tags=["Participants"])
 
 
 @router.post("/", response_model=GameParticipantOut)

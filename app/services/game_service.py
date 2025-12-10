@@ -15,9 +15,6 @@ from app.models.game_mode import GameMode
 
 class GameService:
 
-    # ---------------------------------------------------------
-    # SPIEL STARTEN
-    # ---------------------------------------------------------
     @staticmethod
     async def start_game(
         db: AsyncSession,
@@ -27,10 +24,6 @@ class GameService:
         first_to: int,
         first_shot: int
     ):
-        """
-        Erstellt ein Game + Participants über CRUD.
-        """
-
         return await create_game(
             db=db,
             host_id=host.id,
@@ -41,43 +34,25 @@ class GameService:
             starting_user_id=host.id
         )
 
-    # ---------------------------------------------------------
-    # SPIEL LADEN
-    # ---------------------------------------------------------
     @staticmethod
-    async def load_game(
-        db: AsyncSession,
-        game_id: int,
-        user_id: int
-    ):
-        """
-        Lädt Game + Teilnehmer, prüft, dass der User mitspielt.
-        """
+    async def load_game(db: AsyncSession, game_id: int, user_id: int):
         game = await get_game_raw(db, game_id)
         if not game:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game not found"
-            )
+            raise HTTPException(status_code=404, detail="Game not found")
 
         participant = await get_participant_by_game_and_user(db, game_id, user_id)
         if not participant:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not participant of this game"
-            )
+            raise HTTPException(status_code=403, detail="Not participant of this game")
 
         return game, participant
 
-    # ---------------------------------------------------------
-    # SPIEL BEENDEN
-    # ---------------------------------------------------------
     @staticmethod
     async def finish_game(db: AsyncSession, game_id: int):
         game = await finish_game_crud(db, game_id)
         if not game:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game not found"
-            )
+            raise HTTPException(status_code=404, detail="Game not found")
         return game
+
+    @staticmethod
+    async def get_game_full(db: AsyncSession, game_id: int):
+        return await get_game_raw(db, game_id)

@@ -7,7 +7,7 @@ from app.models.game_mode import GameMode
 from app.schemas.game_mode_schemas import GameModeCreate, GameModeOut
 from app.crud.game_mode_crud import create_game_mode, get_game_mode, get_all_game_modes
 
-router = APIRouter(prefix="/game-modes", tags=["Game Modes"])
+router = APIRouter(tags=["Game Modes"])
 
 
 @router.post("/", response_model=GameModeOut)

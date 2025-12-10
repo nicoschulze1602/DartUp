@@ -5,41 +5,49 @@ import os
 
 # 1) Load environment variables
 load_dotenv()
+
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
+
+# 👉 Tests setzen TESTING=1 → dann bauen wir KEIN Postgres-Engine
+TESTING = os.getenv("TESTING") == "1"
+
+if not DATABASE_URL and not TESTING:
     raise ValueError("DATABASE_URL is not set in the environment.")
 
-# 2) Create async engine (connection to Postgres)
-engine = create_async_engine(DATABASE_URL, echo=True)
+# 2) Engine nur erstellen, wenn wir NICHT im Test laufen
+engine = None
+if not TESTING:
+    engine = create_async_engine(DATABASE_URL, echo=True)
 
-# 3) Session factory for async DB sessions
-AsyncSessionLocal = sessionmaker(
-    bind=engine,
-    expire_on_commit=False,
-    class_=AsyncSession,
-)
+AsyncSessionLocal = None
+if not TESTING:
+    AsyncSessionLocal = sessionmaker(
+        bind=engine,
+        expire_on_commit=False,
+        class_=AsyncSession,
+    )
 
-# 4) Base class for all models
 Base = declarative_base()
 
-# 5) Dependency for FastAPI routes
 async def get_db():
     """
-    Creates a new database session for a request
-    and closes it automatically afterwards.
+    Normaler DB-Zugriff (nur außerhalb der Tests).
+    In Tests wird get_db per dependency_overrides ersetzt.
     """
+    if TESTING:
+        raise RuntimeError("get_db should be overridden during testing.")
+
     async with AsyncSessionLocal() as session:
         yield session
 
 
-# 6) Function to create all tables
 async def init_db():
     """
-    Droppt ALLE Tabellen und erstellt sie neu.
-    Nur für Dev/Reset nutzen – nicht in Produktion!
+    Nur für Entwicklung.
     """
+    if TESTING:
+        return  # Tests brauchen keine Init-DB
+
     async with engine.begin() as conn:
-        # ALLE Tabellen löschen
         await conn.run_sync(Base.metadata.drop_all)
-        # Tabellen neu anlegen
         await conn.run_sync(Base.metadata.create_all)

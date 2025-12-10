@@ -15,21 +15,22 @@ class User(Base):
 
     # Relationships
     games = relationship(
-        "Game",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        foreign_keys="Game.user_id"   # Starter/Owner
+        "Game", back_populates="user", cascade="all, delete-orphan",
+        foreign_keys="Game.user_id", lazy="selectin"
     )
-    statistics = relationship("Statistic", back_populates="user", cascade="all, delete-orphan")
-    participants = relationship("GameParticipant", back_populates="user", cascade="all, delete-orphan")
+    statistics = relationship("Statistic", back_populates="user",
+                              cascade="all, delete-orphan", lazy="selectin")
+    participants = relationship("GameParticipant", back_populates="user",
+                                cascade="all, delete-orphan", lazy="selectin")
 
     friendships_sent = relationship(
         "Friendship",
-        foreign_keys="Friendship.user_id1",  # explizit
-        back_populates="user1"
+        foreign_keys="Friendship.user_id1",
+        back_populates="user1",
+        lazy="selectin"
     )
     friendships_received = relationship(
         "Friendship",
-        foreign_keys="Friendship.user_id2",  # explizit
-        back_populates="user2"
+        foreign_keys="Friendship.user_id2",
+        back_populates="user2", lazy="selectin"
     )

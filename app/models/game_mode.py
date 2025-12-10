@@ -22,5 +22,7 @@ class GameMode(Base):
     # z. B. "double", "straight", None
 
     # Relationships
-    games = relationship("Game", back_populates="game_mode", cascade="all, delete-orphan")
-    statistics = relationship("Statistic", back_populates="game_mode", cascade="all, delete-orphan")
+    games = relationship("Game", back_populates="game_mode",
+                         cascade="all, delete-orphan", lazy="selectin")
+    statistics = relationship("Statistic", back_populates="game_mode",
+                              cascade="all, delete-orphan", lazy="selectin")

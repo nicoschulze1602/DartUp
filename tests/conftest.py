@@ -1,5 +1,5 @@
-import pytest
-from httpx import AsyncClient
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -9,9 +9,9 @@ from app.main import app
 
 
 # ---------------------------------------------------------
-# Async Test-Datenbank
+# 1) Async In-Memory Test-Datenbank
 # ---------------------------------------------------------
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def async_session():
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
@@ -22,21 +22,20 @@ async def async_session():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    TestingSessionLocal = sessionmaker(
-        autocommit=False,
-        autoflush=False,
+    TestSession = sessionmaker(
         bind=engine,
-        class_=AsyncSession,
+        expire_on_commit=False,
+        class_=AsyncSession
     )
 
-    async with TestingSessionLocal() as session:
+    async with TestSession() as session:
         yield session
 
 
 # ---------------------------------------------------------
-# override get_db für FastAPI
+# 2) override get_db für FastAPI → nutzt async_session
 # ---------------------------------------------------------
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def client(async_session: AsyncSession):
 
     async def override_get_db():
@@ -44,7 +43,9 @@ async def client(async_session: AsyncSession):
 
     app.dependency_overrides[get_db] = override_get_db
 
-    async with AsyncClient(app=app, base_url="http://test") as c:
-        yield c
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
     app.dependency_overrides.clear()

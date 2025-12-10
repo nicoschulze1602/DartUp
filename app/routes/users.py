@@ -10,7 +10,7 @@ from app.auth.jwt_handler import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTE
 from app.database import get_db
 from app.crud.user_crud import get_user_by_username, create_user, get_all_users
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(tags=["Users"])
 
 
 @router.post("/register", response_model=UserOut)

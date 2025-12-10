@@ -6,7 +6,7 @@ from app.database import get_db
 from app.schemas.friendship_schemas import FriendshipCreate, FriendshipOut
 from app.crud.friendship_crud import create_friendship, get_friendships_for_user
 
-router = APIRouter(prefix="/friendships", tags=["Friendships"])
+router = APIRouter(tags=["Friendships"])
 
 
 @router.post("/", response_model=FriendshipOut)

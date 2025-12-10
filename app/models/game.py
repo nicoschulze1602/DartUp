@@ -20,11 +20,12 @@ class Game(Base):
     current_turn_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     # ---------- Relationships ----------
-    user = relationship("User", back_populates="games", foreign_keys=[user_id])  # Host
-    game_mode = relationship("GameMode", back_populates="games")
+    user = relationship("User", back_populates="games", foreign_keys=[user_id], lazy="selectin")
+    game_mode = relationship("GameMode", back_populates="games", lazy="selectin")
     participants = relationship("GameParticipant", back_populates="game",
-                                cascade="all, delete-orphan")
-    throws = relationship("Throw", back_populates="game", cascade="all, delete-orphan")
+                                cascade="all, delete-orphan", lazy="selectin")
+    throws = relationship("Throw", back_populates="game",
+                          cascade="all, delete-orphan", lazy="selectin")
 
     # 🆕 Relation zum aktiven Spieler
-    current_turn_user = relationship("User", foreign_keys=[current_turn_user_id])
+    current_turn_user = relationship("User", foreign_keys=[current_turn_user_id], lazy="selectin")
